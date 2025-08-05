@@ -11,10 +11,10 @@ export default function DocsPage() {
   const [activeTab, setActiveTab] = useState('docs');
 
   const tabs = useMemo(() => [
-    { id: 'docs', label: 'API Documentation', icon: '📚' },
-    { id: 'keys', label: 'RSA Key Generator', icon: '🔐' },
-    { id: 'tokens', label: 'Token Generator', icon: '🎫' },
-    { id: 'tester', label: 'API Tester', icon: '🧪' },
+    { id: 'docs', label: 'API 문서', icon: '📚' },
+    { id: 'keys', label: 'RSA 키 생성기', icon: '🔐' },
+    { id: 'tokens', label: '토큰 생성기', icon: '🎫' },
+    { id: 'tester', label: 'API 테스터', icon: '🧪' },
   ], []);
 
   const handleTabChange = useCallback((tab) => {
@@ -39,11 +39,20 @@ export default function DocsPage() {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white p-6">
-          <h1 className="text-3xl font-bold">API Documentation & Tools</h1>
-          <p className="mt-2 text-primary-100">
-            Generate keys, create tokens, and test your API integration
-          </p>
+        <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white p-8">
+          <div className="flex items-center space-x-4">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">API 문서 및 도구</h1>
+              <p className="mt-2 text-primary-100">
+                키 생성, 토큰 생성 및 API 통합 테스트를 위한 종합적인 도구
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="border-b border-gray-200">
@@ -82,21 +91,38 @@ export default function DocsPage() {
         </div>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 shadow-sm">
         <div className="flex">
           <div className="flex-shrink-0">
-            <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="h-5 w-5 text-blue-600" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
           </div>
-          <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-800">Important Security Notice</h3>
-            <div className="mt-2 text-sm text-blue-700">
-              <ul className="list-disc list-inside space-y-1">
-                <li>RSA private keys are shown only once and cannot be retrieved later</li>
-                <li>Store your keys securely and never share them publicly</li>
-                <li>Tokens expire after 24 hours for security</li>
-                <li>Use HTTPS in production environments</li>
+          <div className="ml-4">
+            <h3 className="text-sm font-semibold text-blue-900 flex items-center space-x-2">
+              <span>🔒</span>
+              <span>중요한 보안 안내사항</span>
+            </h3>
+            <div className="mt-3 text-sm text-blue-800">
+              <ul className="space-y-2">
+                <li className="flex items-start space-x-2">
+                  <span className="text-blue-600 font-medium">•</span>
+                  <span>RSA 개인키는 한 번만 표시되며 나중에 다시 조회할 수 없습니다</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <span className="text-blue-600 font-medium">•</span>
+                  <span>키를 안전하게 보관하고 공개적으로 공유하지 마세요</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <span className="text-blue-600 font-medium">•</span>
+                  <span>보안을 위해 토큰은 24시간 후 만료됩니다</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <span className="text-blue-600 font-medium">•</span>
+                  <span>프로덕션 환경에서는 HTTPS를 사용하세요</span>
+                </li>
               </ul>
             </div>
           </div>

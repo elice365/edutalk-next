@@ -81,7 +81,7 @@ export const useChat = (user, selectedChatUser, token) => {
     } catch (error) {
       console.error('React handleNewMessage - Uncaught error in handleNewMessage:', error);
     }
-  }, [setMessagesHistory, user]);
+  }, [setMessagesHistory, user, currentChatUser.chatId]);
 
   // 실시간 타이핑 이벤트 수신 처리
   const handleOpponentTyping = useCallback(() => {

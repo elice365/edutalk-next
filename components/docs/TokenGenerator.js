@@ -38,7 +38,7 @@ const TokenGenerator = memo(() => {
 
   const generateToken = useCallback(async () => {
     if (!payload.identy || !payload.sub || !payload.name) {
-      alert('Please fill in all required fields');
+      alert('모든 필수 필드를 입력해주세요');
       return;
     }
 
@@ -65,7 +65,7 @@ const TokenGenerator = memo(() => {
       setToken(data.token);
     } catch (error) {
       console.error('Error generating token:', error);
-      alert('Failed to generate token. Please try again.');
+      alert('토큰 생성에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsGenerating(false);
     }
@@ -123,9 +123,9 @@ const TokenGenerator = memo(() => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">JWT Token Generator</h2>
+        <h2 className="text-2xl font-bold text-gray-900">JWT 토큰 생성기</h2>
         <p className="mt-2 text-gray-600">
-          Generate JWT tokens for chat authentication using your private key
+          개인키를 사용하여 채팅 인증을 위한 JWT 토큰을 생성합니다
         </p>
         <div className="mt-2 text-sm text-blue-600">
           현재 로그인: <strong>{user.email}</strong> (Identity: {user.identity || user.identy})
@@ -134,7 +134,7 @@ const TokenGenerator = memo(() => {
 
       <div className="max-w-2xl mx-auto">
         <div className="space-y-4">
-          <h3 className="font-semibold text-gray-800">Token Payload</h3>
+          <h3 className="font-semibold text-gray-800">토큰 페이로드</h3>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -151,21 +151,21 @@ const TokenGenerator = memo(() => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              User Type *
+              사용자 유형 *
             </label>
             <select
               value={payload.type}
               onChange={(e) => handlePayloadChange('type', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="student">Student</option>
-              <option value="teacher">Teacher</option>
+              <option value="student">학생</option>
+              <option value="teacher">강사</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              User ID (sub) *
+              사용자 ID (sub) *
             </label>
             <input
               type="text"
@@ -178,7 +178,7 @@ const TokenGenerator = memo(() => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              User Name *
+              사용자 이름 *
             </label>
             <input
               type="text"
@@ -191,7 +191,7 @@ const TokenGenerator = memo(() => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Expiration (hours)
+              만료 시간 (시간)
             </label>
             <input
               type="number"
@@ -240,12 +240,12 @@ const TokenGenerator = memo(() => {
         >
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-green-900">Generated JWT Token</h3>
+              <h3 className="font-semibold text-green-900">생성된 JWT 토큰</h3>
               <button
                 onClick={() => copyToClipboard(token, 'token')}
                 className="px-3 py-1 text-sm bg-white border border-green-300 rounded hover:bg-green-100 transition-colors"
               >
-                {copiedField === 'token' ? '✓ Copied' : '📋 Copy Token'}
+                {copiedField === 'token' ? '✓ 복사됨' : '📋 토큰 복사'}
               </button>
             </div>
             <div className="bg-white p-3 rounded border border-green-200">
@@ -255,13 +255,13 @@ const TokenGenerator = memo(() => {
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-blue-900">Chat URL with Token</h3>
+              <h3 className="font-semibold text-blue-900">토큰이 포함된 채팅 URL</h3>
               <div className="flex space-x-2">
                 <button
                   onClick={() => copyToClipboard(chatUrl, 'url')}
                   className="px-3 py-1 text-sm bg-white border border-blue-300 rounded hover:bg-blue-100 transition-colors"
                 >
-                  {copiedField === 'url' ? '✓ Copied' : '📋 Copy URL'}
+                  {copiedField === 'url' ? '✓ 복사됨' : '📋 URL 복사'}
                 </button>
                 <button
                   onClick={goToChat}
@@ -281,7 +281,7 @@ const TokenGenerator = memo(() => {
           </div>
 
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <h3 className="font-semibold text-gray-900 mb-2">Decoded Payload</h3>
+            <h3 className="font-semibold text-gray-900 mb-2">디코드된 페이로드</h3>
             <pre className="bg-white p-3 rounded border border-gray-200 text-xs overflow-x-auto">
               {JSON.stringify({
                 ...payload,

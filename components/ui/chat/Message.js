@@ -1,5 +1,5 @@
 import { chat } from "@/styles/chat";
-import { useEffect } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import MessageItem from "./MessageItem";
 import { getAvatarUrl } from "@/constants/defaults";
 import Image from "next/image";
@@ -63,21 +63,112 @@ const ChatMessage = ({
   autoScroll = true,
   isOpponentTyping = false
 }) => {
-    useEffect(() => {
-        if (autoScroll && messagesEndRef?.current) {
-        // requestAnimationFrame으로 DOM 업데이트 완료 후 스크롤
-        requestAnimationFrame(() => {
-            if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'auto', block: 'end' });
-            }
-        });
-        }
-    }, [messages, autoScroll, messagesEndRef]);
+  const scrollContainerRef = useRef(null);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const lastMessageCountRef = useRef(messages.length);
+  const lastReadMessageCountRef = useRef(messages.length);
+  const scrollTimeoutRef = useRef(null);
+
+  // 스크롤이 최하단에 있는지 확인
+  const isAtBottom = useCallback(() => {
+    if (!scrollContainerRef.current) return true;
+    
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    const threshold = 100; // 100px 여유분
+    return scrollHeight - scrollTop - clientHeight < threshold;
+  }, []);
+
+  // 스크롤을 최하단으로 이동
+  const scrollToBottom = useCallback((smooth = false) => {
+    if (messagesEndRef?.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: smooth ? 'smooth' : 'auto', 
+        block: 'end' 
+      });
+    }
+    // 스크롤 후 읽지 않은 메시지 카운트 리셋
+    setUnreadCount(0);
+    lastReadMessageCountRef.current = messages.length;
+  }, [messagesEndRef, messages.length]);
+
+  // 스크롤 이벤트 핸들러
+  const handleScroll = useCallback(() => {
+    if (!scrollContainerRef.current) return;
+
+    const atBottom = isAtBottom();
+    setShowScrollToBottom(!atBottom);
+
+    // 사용자가 스크롤 중인지 감지
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+
+    if (atBottom) {
+      setIsUserScrolling(false);
+      // 최하단에 있으면 읽지 않은 메시지 카운트 리셋
+      setUnreadCount(0);
+      lastReadMessageCountRef.current = messages.length;
+    } else {
+      setIsUserScrolling(true);
+      // 2초 후 사용자 스크롤 상태 해제
+      scrollTimeoutRef.current = setTimeout(() => {
+        setIsUserScrolling(false);
+      }, 2000);
+    }
+  }, [isAtBottom]);
+
+  // 새 메시지나 타이핑 상태 변경 시 자동 스크롤
+  useEffect(() => {
+    if (!autoScroll) return;
+
+    const hasNewMessages = messages.length > lastMessageCountRef.current;
+    const newMessageCount = messages.length - lastMessageCountRef.current;
+    lastMessageCountRef.current = messages.length;
+
+    // 새 메시지가 있거나 타이핑 상태 변경 시
+    if (hasNewMessages || isOpponentTyping) {
+      // 사용자가 스크롤 중이 아니거나 이미 최하단에 있는 경우 자동 스크롤
+      if (!isUserScrolling || isAtBottom()) {
+        // DOM 업데이트를 위해 약간의 지연
+        setTimeout(() => {
+          scrollToBottom(false);
+        }, 50);
+      } else if (hasNewMessages) {
+        // 사용자가 스크롤 중인 경우 읽지 않은 메시지 카운트 증가
+        setUnreadCount(prev => prev + newMessageCount);
+      }
+    }
+  }, [messages, isOpponentTyping, autoScroll, isUserScrolling, isAtBottom, scrollToBottom]);
+
+  // 타이핑 상태 변경 시 추가 스크롤 처리
+  useEffect(() => {
+    if (isOpponentTyping && !isUserScrolling) {
+      // 타이핑 애니메이션이 나타날 때 스크롤
+      setTimeout(() => {
+        scrollToBottom(true);
+      }, 100);
+    }
+  }, [isOpponentTyping, isUserScrolling, scrollToBottom]);
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden relative">
       {/* 스크롤 가능한 메시지 컨테이너 - 고정 높이 */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto overflow-x-hidden"
+        onScroll={handleScroll}
+      >
         <div className={chat.messages.container}>
           {/* 실제 메시지 */}
           {messages.map((message, index) => (
@@ -111,6 +202,35 @@ const ChatMessage = ({
           <div ref={messagesEndRef} />
         </div>
       </div>
+
+      {/* 아래로 스크롤 버튼 */}
+      {showScrollToBottom && (
+        <button
+          onClick={() => scrollToBottom(true)}
+          className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110 z-10 relative"
+          aria-label="맨 아래로 스크롤"
+        >
+          {/* 읽지 않은 메시지 카운트 배지 */}
+          {unreadCount > 0 && (
+            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-semibold">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+          <svg 
+            className="w-5 h-5" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

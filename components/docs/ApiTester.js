@@ -16,43 +16,43 @@ const ApiTester = memo(() => {
 
   const endpoints = useMemo(() => [
     {
-      name: 'Chat - Send Message',
+      name: '채팅 - 메시지 전송',
       path: '/api/chat',
       method: 'POST',
       requiresAuth: true,
-      description: 'Send message to chat',
+      description: '채팅으로 메시지 전송',
       exampleBody: JSON.stringify({ type: 'send', id: 'chat-id', message: 'Hello!' }, null, 2),
     },
     {
-      name: 'Chat - List',
+      name: '채팅 - 목록',
       path: '/api/chat',
       method: 'POST',
       requiresAuth: true,
-      description: 'Get user chat list',
+      description: '사용자 채팅 목록 조회',
       exampleBody: JSON.stringify({ type: 'list' }, null, 2),
     },
     {
-      name: 'Create Chat (Admin)',
+      name: '채팅 생성 (관리자)',
       path: '/api/edit/chat',
       method: 'POST',
       requiresAuth: true,
-      description: 'Create new chat room (teacher only)',
+      description: '새 채팅방 생성 (강사 전용)',
       exampleBody: JSON.stringify({ type: 'create', id: 'student-id', name: 'Student Name' }, null, 2),
     },
     {
-      name: 'Create Notice (Admin)',
+      name: '공지 생성 (관리자)',
       path: '/api/edit/notice',
       method: 'POST',
       requiresAuth: true,
-      description: 'Create notice (teacher only)',
+      description: '공지 생성 (강사 전용)',
       exampleBody: JSON.stringify({ type: 'create', title: 'Notice Title', context: 'Notice content' }, null, 2),
     },
     {
-      name: 'Get Notices',
+      name: '공지 조회',
       path: '/api/notices?identy=contractor-id',
       method: 'GET',
       requiresAuth: false,
-      description: 'Get public notices for contractor',
+      description: '계약자용 공개 공지 조회',
     },
   ], []);
 
@@ -120,15 +120,15 @@ const ApiTester = memo(() => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">API Tester</h2>
+        <h2 className="text-2xl font-bold text-gray-900">API 테스터</h2>
         <p className="mt-2 text-gray-600">
-          Test API endpoints with custom requests and authentication
+          사용자 지정 요청 및 인증으로 API 엔드포인트를 테스트합니다
         </p>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <h3 className="font-semibold text-gray-800 mb-3">Quick Select</h3>
+          <h3 className="font-semibold text-gray-800 mb-3">빠른 선택</h3>
           <div className="space-y-2 max-h-96 overflow-y-auto">
             {endpoints.map((endpoint, index) => (
               <button
@@ -158,7 +158,7 @@ const ApiTester = memo(() => {
                 <p className="text-xs text-gray-600 mt-1">{endpoint.description}</p>
                 {endpoint.requiresAuth && (
                   <span className="inline-block mt-1 px-2 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded">
-                    🔐 Auth Required
+                    🔐 인증 필요
                   </span>
                 )}
               </button>
@@ -182,7 +182,7 @@ const ApiTester = memo(() => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Method
+                메소드
               </label>
               <select
                 value={method}
@@ -200,20 +200,20 @@ const ApiTester = memo(() => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Authorization Token (Optional)
+              인증 토큰 (선택사항)
             </label>
             <input
               type="text"
               value={authToken}
               onChange={(e) => setAuthToken(e.target.value)}
-              placeholder="JWT token (without Bearer prefix)"
+              placeholder="JWT 토큰 (Bearer 접두어 없이)"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 font-mono text-xs"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Headers (JSON)
+              헤더 (JSON)
             </label>
             <textarea
               value={headers}
@@ -226,7 +226,7 @@ const ApiTester = memo(() => {
           {method !== 'GET' && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Request Body (JSON)
+                요청 본문 (JSON)
               </label>
               <textarea
                 value={body}
@@ -249,7 +249,7 @@ const ApiTester = memo(() => {
               text-white
             `}
           >
-            {isLoading ? 'Sending...' : '🚀 Send Request'}
+            {isLoading ? '전송 중...' : '🚀 요청 전송'}
           </button>
 
           {response && (
@@ -260,7 +260,7 @@ const ApiTester = memo(() => {
             >
               {responseTime && (
                 <div className="text-sm text-gray-600">
-                  Response time: <span className="font-mono">{responseTime.toFixed(2)}ms</span>
+                  응답 시간: <span className="font-mono">{responseTime.toFixed(2)}ms</span>
                 </div>
               )}
               
@@ -273,20 +273,20 @@ const ApiTester = memo(() => {
                       'bg-red-50 border border-red-200'}
                   `}>
                     <div className="flex items-center justify-between">
-                      <span className="font-semibold">Status</span>
+                      <span className="font-semibold">상태</span>
                       <span className="font-mono">{response.status} {response.statusText}</span>
                     </div>
                   </div>
 
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <h4 className="font-semibold mb-2">Response Headers</h4>
+                    <h4 className="font-semibold mb-2">응답 헤더</h4>
                     <pre className="text-xs overflow-x-auto">
                       {JSON.stringify(response.headers, null, 2)}
                     </pre>
                   </div>
 
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
-                    <h4 className="font-semibold mb-2">Response Body</h4>
+                    <h4 className="font-semibold mb-2">응답 본문</h4>
                     <pre className="text-xs overflow-x-auto">
                       {typeof response.data === 'object'
                         ? JSON.stringify(response.data, null, 2)
@@ -296,7 +296,7 @@ const ApiTester = memo(() => {
                 </>
               ) : (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <h4 className="font-semibold text-red-900">Error</h4>
+                  <h4 className="font-semibold text-red-900">오류</h4>
                   <p className="text-red-700 mt-1">{response.message}</p>
                 </div>
               )}

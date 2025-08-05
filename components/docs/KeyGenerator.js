@@ -29,7 +29,7 @@ const KeyGenerator = memo(() => {
       setShowPrivateKey(false);
     } catch (error) {
       console.error('Error generating keys:', error);
-      alert('Failed to generate keys. Please try again.');
+      alert('키 생성에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsGenerating(false);
     }
@@ -71,9 +71,9 @@ const KeyGenerator = memo(() => {
   return (
     <div className="space-y-6">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">RSA Key Pair Generator</h2>
+        <h2 className="text-2xl font-bold text-gray-900">RSA 키 쌍 생성기</h2>
         <p className="mt-2 text-gray-600">
-          Generate RS256 key pairs for JWT signing. Private keys are shown only once!
+          JWT 서명을 위한 RS256 키 쌍을 생성합니다. 개인키는 한 번만 표시됩니다!
         </p>
       </div>
 
@@ -96,10 +96,10 @@ const KeyGenerator = memo(() => {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Generating...
+생성 중...
             </span>
           ) : (
-            '🔐 Generate New Key Pair'
+            '🔐 새 키 쌍 생성'
           )}
         </button>
       </div>
@@ -112,19 +112,19 @@ const KeyGenerator = memo(() => {
         >
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-green-900">Public Key</h3>
+              <h3 className="font-semibold text-green-900">공개키</h3>
               <div className="space-x-2">
                 <button
                   onClick={() => copyToClipboard(keyPair.publicKey, 'public')}
                   className="px-3 py-1 text-sm bg-white border border-green-300 rounded hover:bg-green-100 transition-colors"
                 >
-                  {copiedField === 'public' ? '✓ Copied' : '📋 Copy'}
+                  {copiedField === 'public' ? '✓ 복사됨' : '📋 복사'}
                 </button>
                 <button
                   onClick={() => downloadKey(keyPair.publicKey, 'public')}
                   className="px-3 py-1 text-sm bg-white border border-green-300 rounded hover:bg-green-100 transition-colors"
                 >
-                  💾 Download
+                  💾 다운로드
                 </button>
               </div>
             </div>
@@ -135,13 +135,13 @@ const KeyGenerator = memo(() => {
 
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-red-900">Private Key</h3>
+              <h3 className="font-semibold text-red-900">개인키</h3>
               {!hasViewed ? (
                 <button
                   onClick={viewPrivateKey}
                   className="px-4 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                 >
-                  🔓 View Private Key (One Time Only)
+                  🔓 개인키 보기 (단 한 번만)
                 </button>
               ) : showPrivateKey ? (
                 <div className="space-x-2">
@@ -149,19 +149,19 @@ const KeyGenerator = memo(() => {
                     onClick={() => copyToClipboard(keyPair.privateKey, 'private')}
                     className="px-3 py-1 text-sm bg-white border border-red-300 rounded hover:bg-red-100 transition-colors"
                   >
-                    {copiedField === 'private' ? '✓ Copied' : '📋 Copy'}
+                    {copiedField === 'private' ? '✓ 복사됨' : '📋 복사'}
                   </button>
                   <button
                     onClick={() => downloadKey(keyPair.privateKey, 'private')}
                     className="px-3 py-1 text-sm bg-white border border-red-300 rounded hover:bg-red-100 transition-colors"
                   >
-                    💾 Download
+                    💾 다운로드
                   </button>
-                  <span className="text-xs text-red-600">Auto-hide in 30s</span>
+                  <span className="text-xs text-red-600">30초 후 자동 숨김</span>
                 </div>
               ) : (
                 <span className="text-sm text-red-600 font-medium">
-                  ⚠️ Key has been viewed and hidden
+                  ⚠️ 키가 확인되어 숨거졌습니다
                 </span>
               )}
             </div>
@@ -173,8 +173,8 @@ const KeyGenerator = memo(() => {
               <div className="bg-white p-8 rounded border border-red-200 text-center">
                 <p className="text-gray-500">
                   {hasViewed
-                    ? '🔒 Private key has been viewed and is now hidden for security'
-                    : '🔐 Click "View Private Key" to reveal (one-time only)'}
+                    ? '🔒 개인키가 확인되어 보안상 숨겨졌습니다'
+                    : '🔐 "개인키 보기"를 클릭하여 확인하세요 (단 한 번만)'}
                 </p>
               </div>
             )}
@@ -186,12 +186,12 @@ const KeyGenerator = memo(() => {
                 <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
               <div className="ml-3">
-                <h4 className="text-sm font-medium text-yellow-800">Security Warning</h4>
+                <h4 className="text-sm font-medium text-yellow-800">보안 경고</h4>
                 <ul className="mt-2 text-sm text-yellow-700 list-disc list-inside">
-                  <li>Private keys can only be viewed once for security</li>
-                  <li>Save your private key immediately - it cannot be recovered</li>
-                  <li>Never share your private key or commit it to version control</li>
-                  <li>Generated at: {new Date(keyPair.createdAt).toLocaleString()}</li>
+                  <li>개인키는 보안상 한 번만 확인할 수 있습니다</li>
+                  <li>개인키를 즉시 저장하세요 - 복구할 수 없습니다</li>
+                  <li>개인키를 공유하거나 버전 컨트롤에 커밋하지 마세요</li>
+                  <li>생성 시각: {new Date(keyPair.createdAt).toLocaleString()}</li>
                 </ul>
               </div>
             </div>
