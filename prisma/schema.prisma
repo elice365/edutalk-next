@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Contractor {
+  uid            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identy         String    @unique @db.VarChar
+  email          String    @unique @db.VarChar
+  password       String    @db.VarChar
+  passwordSalt   String    @db.VarChar @map("password_salt")
+  publicKey      String?
+  privateKey     String?
+  periodTime     DateTime?
+  expirationTime DateTime?
+  emailExpires   DateTime?
+  emailToken     String?
+  certified      Boolean   @default(false)
+  origin         String?
+  type           String?   @db.VarChar
+  name           String?   @db.VarChar
+
+  @@index([certified])
+  @@index([emailToken])
+  @@index([emailExpires])
+  @@index([periodTime])
+  @@map("contractor")
+}
+
+model Chat {
+  uid            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identy         String   @db.VarChar(255)
+  lastChat       String?  @db.VarChar(255)
+  createTime     DateTime @default(now()) @map("creat_time") @db.Timestamp(6)
+  updateTime     DateTime @default(now()) @map("update_time") @db.Timestamp(6)
+  instructorID   String   @db.VarChar
+  instructorName String   @default("") @map("instructor_name") @db.VarChar(255)
+  studentID      String   @db.VarChar
+  studentName    String   @default("") @map("student_name") @db.VarChar(255)
+  lastChatSender String?  @db.VarChar(255)
+
+  @@unique([identy, instructorID, studentID])
+  @@index([identy])
+  @@index([instructorID])
+  @@index([studentID])
+  @@index([updateTime])
+  @@index([identy, instructorID, studentID])
+  @@map("chat")
+}
+
+model Notice {
+  uid            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title          String    @db.VarChar
+  context        String
+  identy         String    @db.VarChar
+  instructor     String    @db.VarChar
+  createTime     DateTime  @default(now()) @map("create_time")
+  updateTime     DateTime  @default(now()) @map("update_time") @db.Timestamp(6)
+  expirationTime DateTime?
+  displayOrder   Int       @default(0) @map("display_order")
+  delete         Boolean   @default(false)
+
+  @@index([identy])
+  @@index([delete])
+  @@index([identy, delete])
+  @@index([displayOrder])
+  @@index([createTime])
+  @@index([expirationTime])
+  @@index([identy, delete, displayOrder, createTime])
+  @@map("notice")
+}
