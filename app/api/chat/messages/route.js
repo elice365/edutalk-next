@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/middleware/auth';
 import { getChatMessages, markMessagesAsRead } from '@/utils/mongodb';
+import { getAvatarUrl } from '@/constants/defaults';
 
 /**
  * API: /api/chat/messages?token=&chatRoomId=
@@ -46,18 +47,24 @@ async function handler(req) {
       console.log(`Found ${messages.length} messages for chat room ${chatRoomId}`);
 
       // 메시지를 클라이언트 형식으로 변환
-      const formattedMessages = messages.map(msg => ({
-        id: msg.uid,
-        sender: msg.senderName,
-        message: msg.message,
-        timestamp: msg.createdAt,
-        isOwn: msg.senderId === userId,
-        type: msg.type || 'text',
-        avatar: msg.senderId === userId ? null : null, // TODO: 상대방 아바타 정보 추가
-        status: 'delivered',
-        sequence: msg.sequence,
-        read: msg.read
-      }));
+      const formattedMessages = messages.map(msg => {
+        // 디버깅을 위한 로그
+        console.log(`Message sender check - msgSenderId: ${msg.senderId}, currentUserId: ${userId}, isOwn: ${msg.senderId === userId}`);
+        
+        return {
+          id: msg.uid,
+          sender: msg.senderName,
+          message: msg.message,
+          timestamp: msg.createdAt,
+          isOwn: msg.senderId === userId,  // 메시지 발신자 ID와 현재 사용자 ID 비교
+          senderId: msg.senderId,  // senderId도 포함
+          type: msg.type || 'text',
+          avatar: msg.senderId === userId ? null : getAvatarUrl(), // 상대방 아바타
+          status: 'delivered',
+          sequence: msg.sequence,
+          read: msg.read
+        };
+      });
 
       return NextResponse.json({
         success: true,
