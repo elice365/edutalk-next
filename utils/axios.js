@@ -23,6 +23,13 @@ api.interceptors.request.use(
     // Add request ID for tracking
     config.headers['X-Request-ID'] = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
     
+    // 캐시 방지 헤더 추가 (GET 요청에만 적용)
+    if (config.method === 'get') {
+      config.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+      config.headers['Pragma'] = 'no-cache';
+      config.headers['Expires'] = '0';
+    }
+    
     return config;
   },
   (error) => {

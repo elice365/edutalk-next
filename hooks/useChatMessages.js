@@ -18,17 +18,25 @@ export const useChatMessages = (currentChatUser, token) => {
   }, [messagesHistory, currentChatUser.chatId]); // 의존성 배열에 currentChatUser.chatId 추가
 
   // 채팅방의 메시지를 로드하는 함수 (새로운 메시지 조회 API 사용)
-  const loadChatMessages = useCallback(async (chatRoomId) => {
+  const loadChatMessages = useCallback(async (chatRoomId, forceReload = false) => {
     if (!chatRoomId || !token) {
       return;
     }
+    
+    // 강제 리로드 시 기존 메시지 초기화
+    if (forceReload) {
+      setMessagesHistory(prev => ({ ...prev, [chatRoomId]: [] }));
+    }
+    
     try {
-      console.log(`Loading messages for chatRoomId: ${chatRoomId}`);
+      console.log(`Loading messages for chatRoomId: ${chatRoomId} (force: ${forceReload})`);
       
-      // 새로운 메시지 조회 API 사용
-      const response = await api.get(`/api/chat/messages?chatRoomId=${chatRoomId}`, {
+      // 새로운 메시지 조회 API 사용 - 캐시 무효화를 위해 timestamp 추가
+      const response = await api.get(`/api/chat/messages?chatRoomId=${chatRoomId}&t=${Date.now()}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
         }
       });
       

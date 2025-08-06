@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useCallback, memo, useMemo, useContext, useEffect } from 'react';
+import { useState, useCallback, memo, useMemo, useContext, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { AuthContext } from '@/components/provider/Auth';
+import QRCode from 'qrcode';
 
 const TokenGenerator = memo(() => {
   const { user } = useContext(AuthContext);
@@ -31,9 +32,44 @@ const TokenGenerator = memo(() => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
   const [expirationHours, setExpirationHours] = useState(24);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const qrCanvasRef = useRef(null);
 
   const handlePayloadChange = useCallback((field, value) => {
     setPayload(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  // QR 코드 생성 함수
+  const generateQRCode = useCallback(async (tokenValue) => {
+    if (!tokenValue) return;
+    
+    setIsGeneratingQR(true);
+    try {
+      // 토큰을 URL 형태로 생성
+      const tokenUrl = `${window.location.origin}/chat?token=${tokenValue}`;
+      
+      // QR 코드 생성 옵션
+      const qrOptions = {
+        errorCorrectionLevel: 'M',
+        type: 'image/png',
+        quality: 0.92,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        },
+        width: 256
+      };
+      
+      const dataUrl = await QRCode.toDataURL(tokenUrl, qrOptions);
+      setQrCodeDataUrl(dataUrl);
+    } catch (error) {
+      console.error('QR 코드 생성 실패:', error);
+      alert('QR 코드 생성에 실패했습니다.');
+    } finally {
+      setIsGeneratingQR(false);
+    }
   }, []);
 
   const generateToken = useCallback(async () => {
@@ -63,13 +99,16 @@ const TokenGenerator = memo(() => {
       
       const data = await response.json();
       setToken(data.token);
+      
+      // 토큰 생성 후 자동으로 QR 코드 생성
+      await generateQRCode(data.token);
     } catch (error) {
       console.error('Error generating token:', error);
       alert('토큰 생성에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsGenerating(false);
     }
-  }, [payload, expirationHours]);
+  }, [payload, expirationHours, generateQRCode]);
 
   const copyToClipboard = useCallback(async (text, field) => {
     try {
@@ -80,6 +119,18 @@ const TokenGenerator = memo(() => {
       console.error('Failed to copy:', error);
     }
   }, []);
+
+  // QR 코드 다운로드 함수
+  const downloadQRCode = useCallback(() => {
+    if (!qrCodeDataUrl) return;
+    
+    const link = document.createElement('a');
+    link.download = `edutalk-token-qr-${Date.now()}.png`;
+    link.href = qrCodeDataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [qrCodeDataUrl]);
 
   const goToChat = useCallback(() => {
     if (token) {
@@ -277,6 +328,84 @@ const TokenGenerator = memo(() => {
                   {chatUrl}
                 </a>
               </p>
+            </div>
+          </div>
+
+          {/* QR 코드 섹션 */}
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-purple-900 flex items-center">
+                📱 모바일 앱용 QR 코드
+              </h3>
+              <div className="flex space-x-2">
+                {qrCodeDataUrl && (
+                  <button
+                    onClick={downloadQRCode}
+                    className="px-3 py-1 text-sm bg-white border border-purple-300 rounded hover:bg-purple-100 transition-colors"
+                  >
+                    💾 QR 코드 다운로드
+                  </button>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex flex-col lg:flex-row gap-4 items-center">
+              <div className="flex-shrink-0">
+                {isGeneratingQR ? (
+                  <div className="w-64 h-64 bg-white border-2 border-dashed border-purple-300 rounded-lg flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-purple-600">QR 코드 생성 중...</p>
+                    </div>
+                  </div>
+                ) : qrCodeDataUrl ? (
+                  <div className="bg-white p-4 rounded-lg border-2 border-purple-200 shadow-sm">
+                    <img 
+                      src={qrCodeDataUrl} 
+                      alt="토큰 QR 코드" 
+                      className="w-56 h-56 mx-auto"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-64 h-64 bg-white border-2 border-dashed border-purple-300 rounded-lg flex items-center justify-center">
+                    <div className="text-center text-purple-600">
+                      <div className="text-4xl mb-2">📱</div>
+                      <p className="text-sm">토큰 생성 후<br />QR 코드가 표시됩니다</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex-1">
+                <div className="bg-white p-4 rounded-lg border border-purple-200">
+                  <h4 className="font-medium text-purple-900 mb-3">📲 사용 방법</h4>
+                  <ol className="text-sm text-purple-800 space-y-2">
+                    <li className="flex items-start">
+                      <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-0.5">1</span>
+                      <span>React Native Expo 채팅 앱을 휴대폰에 설치합니다</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-0.5">2</span>
+                      <span>앱에서 QR 코드 스캔 기능을 실행합니다</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-0.5">3</span>
+                      <span>이 QR 코드를 스캔하면 자동으로 로그인됩니다</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-xs font-medium mr-3 mt-0.5">4</span>
+                      <span>실시간 채팅을 이용할 수 있습니다</span>
+                    </li>
+                  </ol>
+                  
+                  <div className="mt-4 p-3 bg-purple-100 rounded-lg">
+                    <p className="text-xs text-purple-700">
+                      💡 <strong>팁:</strong> QR 코드에는 토큰이 포함된 채팅 URL이 인코딩되어 있습니다. 
+                      보안을 위해 토큰의 만료 시간을 적절히 설정하세요.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

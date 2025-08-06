@@ -57,6 +57,12 @@ let clientPromise;
 const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGODB_FALLBACK_URI;
 const USE_MOCK = process.env.USE_MOCK_MONGODB === 'true';
 
+console.log('MongoDB Configuration:', {
+  uri: MONGODB_URI ? 'Set' : 'Not set',
+  useMock: USE_MOCK,
+  env: process.env.NODE_ENV
+});
+
 if (!MONGODB_URI && !USE_MOCK) {
   console.warn('MongoDB URI not found, using mock mode');
 }
@@ -64,24 +70,15 @@ if (!MONGODB_URI && !USE_MOCK) {
 if (!USE_MOCK && MONGODB_URI) {
   // Serverless-compatible MongoDB configuration (Vercel deployment ready)
   const mongoOptions = {
-    maxPoolSize: 5, // 연결 풀 크기 감소
-    serverSelectionTimeoutMS: 10000, // 타임아웃 증가
-    socketTimeoutMS: 30000, // 소켓 타임아웃 감소
-    connectTimeoutMS: 10000, // 연결 타임아웃 설정
-    // Wire version 호환성을 위한 설정
-    retryWrites: false, // 재시도 비활성화
+    maxPoolSize: 5,
+    serverSelectionTimeoutMS: 10000,
+    socketTimeoutMS: 30000,
+    connectTimeoutMS: 10000,
+    retryWrites: false,
     retryReads: false,
-    // Disable client-side encryption for serverless compatibility
-    monitorCommands: false,
-    // Optimize for serverless environments
-    maxIdleTimeMS: 20000, // 유휴 시간 감소
-    // Disable compression for better performance in serverless
-    compressors: [],
-    // Disable auto encryption (not supported in serverless)
-    autoEncryption: undefined,
-    // 추가 호환성 설정
-    directConnection: true, // 직접 연결 사용
-    heartbeatFrequencyMS: 30000, // 하트비트 빈도 조정
+    authSource: 'admin',
+    tls: false,  // TLS 비활성화 (Cloudtype MongoDB 호환성)
+    directConnection: true,
   };
 
   if (process.env.NODE_ENV === 'development') {
@@ -104,6 +101,7 @@ if (!USE_MOCK && MONGODB_URI) {
  */
 export async function getDatabase() {
   if (USE_MOCK) {
+    console.log('Using mock MongoDB database');
     // Return mock database for development
     return {
       collection: (name) => ({
@@ -119,6 +117,7 @@ export async function getDatabase() {
 
   try {
     const client = await clientPromise;
+    console.log('MongoDB connected successfully');
     return client.db('edutalk');
   } catch (error) {
     console.error('Failed to connect to MongoDB:', error);
@@ -174,6 +173,13 @@ export async function initializeMongoDB(identity) {
  * @returns {Promise<Object>} Stored message data
  */
 export async function storeMessage(messageData, identity) {
+  console.log('storeMessage called with:', {
+    chatRoomId: messageData.chatRoomId,
+    identity: identity,
+    senderId: messageData.senderId,
+    message: messageData.message?.substring(0, 50) + '...'
+  });
+  
   // Validate input parameters
   try {
     validateChatParams({
@@ -295,15 +301,15 @@ export async function getChatMessages(chatRoomId, identity, options = {}) {
     const collection = await getChatCollection(identity);
     
     const {
-      limit = 50,
+      limit = 9999,  // 기본값을 9999로 변경하여 모든 메시지 가져오기
       skip = 0,
       includeDeleted = false
     } = options;
     
     // Validate pagination parameters
-    if (limit < 1 || limit > 100) {
+    if (limit < 1 || limit > 10000) {  // 최대 제한을 10000으로 증가
       throw new ChatError(
-        'Limit must be between 1 and 100',
+        'Limit must be between 1 and 10000',
         'VALIDATION_ERROR',
         400,
         { limit }
@@ -343,7 +349,19 @@ export async function getChatMessages(chatRoomId, identity, options = {}) {
     messages.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
     
     const totalCount = messages.length;
-    const paginatedMessages = messages.slice(skip, skip + limit);
+    
+    // 페이지네이션 로직
+    let paginatedMessages;
+    if (skip === 0 && limit >= totalCount) {
+      // 전체 메시지 반환
+      paginatedMessages = messages;
+    } else if (skip === 0 && totalCount > limit) {
+      // 최근 메시지부터 limit 개수만큼 가져오기
+      paginatedMessages = messages.slice(-limit);
+    } else {
+      // 일반 페이지네이션
+      paginatedMessages = messages.slice(skip, skip + limit);
+    }
     
     // Format dates for consistency
     const formattedMessages = paginatedMessages.map(msg => ({

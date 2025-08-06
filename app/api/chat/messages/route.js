@@ -31,8 +31,8 @@ async function handler(req) {
 
   try {
     if (req.method === 'GET') {
-      // 메시지 조회
-      const limit = parseInt(url.searchParams.get('limit')) || 50;
+      // 메시지 조회 - 전체 메시지 가져오기
+      const limit = parseInt(url.searchParams.get('limit')) || 9999;  // 기본값을 9999로 변경하여 모든 메시지 가져오기
       const skip = parseInt(url.searchParams.get('skip')) || 0;
       
       console.log(`Fetching messages for chatRoomId: ${chatRoomId}, identity: ${identy}`);

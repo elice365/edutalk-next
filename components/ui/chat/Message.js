@@ -201,36 +201,39 @@ const ChatMessage = ({
           {/* 스크롤 앵커 */}
           <div ref={messagesEndRef} />
         </div>
+        
+        {/* 아래로 스크롤 버튼 - 메시지 컨테이너 내부 하단에 고정 */}
+        {showScrollToBottom && (
+          <div className="sticky bottom-2 right-0 flex justify-end pr-4 pb-2">
+            <button
+              onClick={() => scrollToBottom(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-110 relative"
+              aria-label="맨 아래로 스크롤"
+            >
+              {/* 읽지 않은 메시지 카운트 배지 */}
+              {unreadCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-semibold">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+              <svg 
+                className="w-4 h-4" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3" 
+                />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* 아래로 스크롤 버튼 */}
-      {showScrollToBottom && (
-        <button
-          onClick={() => scrollToBottom(true)}
-          className="absolute bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110 z-10 relative"
-          aria-label="맨 아래로 스크롤"
-        >
-          {/* 읽지 않은 메시지 카운트 배지 */}
-          {unreadCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 font-semibold">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
-          )}
-          <svg 
-            className="w-5 h-5" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M19 14l-7 7m0 0l-7-7m7 7V3" 
-            />
-          </svg>
-        </button>
-      )}
     </div>
   );
 }

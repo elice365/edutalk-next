@@ -100,17 +100,19 @@ export const useChat = (user, selectedChatUser, token) => {
   // 컴포넌트 마운트 시 또는 채팅 유저 변경 시 메시지 로드
   useEffect(() => {
     if (currentChatUser.chatId) {
-        loadChatMessages(currentChatUser.chatId);
+        // 항상 최신 메시지를 가져오기 위해 강제 로드 (forceReload = true)
+        console.log('Force loading messages for chat:', currentChatUser.chatId);
+        loadChatMessages(currentChatUser.chatId, true);
+        
         // 채팅방 진입 시 읽지 않은 메시지 수 0으로 업데이트
         if (currentChatUser.unreadCount > 0) {
           // UI를 먼저 업데이트하기 위해 이벤트 먼저 발생
           window.dispatchEvent(new CustomEvent('chatUpdated', {
             detail: { chatUser: currentChatUser.chatId, message: currentChatUser.lastChat, unreadCount: 0 } // unreadCount도 함께 전달
           }));
-
         }
     }
-  }, [currentChatUser, loadChatMessages, selectedChatUser]); // selectedChatUser를 의존성 배열에 추가
+  }, [currentChatUser.chatId, loadChatMessages]); // chatId만 의존성으로 설정하여 새로고침 시 다시 로드
 
   // 메시지 전송 핸들러
   const handleSendMessage = useCallback(async (messageText) => {
