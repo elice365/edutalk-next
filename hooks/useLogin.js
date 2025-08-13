@@ -31,6 +31,14 @@ export const useLogin = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   }, []);
 
+  const handleDemoLogin = useCallback(() => {
+    setFormData({
+      email: "test@mail.com",
+      password: "qwer1234"
+    });
+    setError(null);
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -103,5 +111,6 @@ export const useLogin = () => {
     setFocusedField,
     handleInputChange,
     handleSubmit,
+    handleDemoLogin,
   };
 };

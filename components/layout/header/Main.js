@@ -57,45 +57,6 @@ const Header=()=> {
           {/* Right Section */}
           <div className={dashboard.header.rightSection}>
             <AnimatePresence mode="wait">
-            {isLoggedIn ? (
-              <>
-                <NotificationDropdown
-                  isNotificationOpen={isNotificationOpen}
-                  setIsNotificationOpen={setIsNotificationOpen}
-                  notificationRef={notificationRef}
-                />
-                <ProfileDropdown
-                  user={user}
-                  isProfileMenuOpen={isProfileMenuOpen}
-                  setIsProfileMenuOpen={setIsProfileMenuOpen}
-                  profileRef={profileRef}
-                  onLogout={handleLogout}
-                />
-              </>
-            ) : (
-              <div className="flex items-center gap-2">
-                <motion.a
-                  href="/auth/login"
-                  className={route.header.cta.login}
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  로그인
-                </motion.a>
-                <motion.a
-                  href="/auth/register"
-                  className={route.header.cta.register.group}
-                  whileHover={{ 
-                    scale: 1.05,
-                    boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)"
-                  }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <span className={route.header.cta.register.span}></span>
-                  <span className={route.header.cta.register.text}>회원 가입</span>
-                </motion.a>
-              </div>
-            )}
             </AnimatePresence>
           </div>
         </div>

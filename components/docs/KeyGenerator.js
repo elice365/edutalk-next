@@ -73,7 +73,9 @@ const KeyGenerator = memo(() => {
       <div className="text-center">
         <h2 className="text-2xl font-bold text-gray-900">RSA 키 쌍 생성기</h2>
         <p className="mt-2 text-gray-600">
-          JWT 서명을 위한 RS256 키 쌍을 생성합니다. 개인키는 한 번만 표시됩니다!
+          JWT 서명을 위한 RS256 키 쌍을 생성합니다.<br />
+          개인키는 한 번만 표시됩니다!<br />
+          세심하게 만들어주세요.
         </p>
       </div>
 
@@ -161,7 +163,7 @@ const KeyGenerator = memo(() => {
                 </div>
               ) : (
                 <span className="text-sm text-red-600 font-medium">
-                  ⚠️ 키가 확인되어 숨거졌습니다
+                  ⚠️ 키가 확인되어 숨겨졌습니다
                 </span>
               )}
             </div>

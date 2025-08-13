@@ -6,7 +6,10 @@
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "vercel:env": "node vercel-env-setup.js",
+    "vercel:deploy": "vercel --prod",
+    "vercel:setup": "npm run vercel:env && npm run vercel:deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.13.0",

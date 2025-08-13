@@ -44,6 +44,7 @@ const Login = () => {
     setFocusedField,
     handleInputChange,
     handleSubmit,
+    handleDemoLogin,
   } = useLogin();
 
   return (
@@ -96,6 +97,24 @@ const Login = () => {
         <AuthButton type="submit" isLoading={isLoading} disabled={!formData.email || !formData.password}>
           {isLoading ? "로그인 중..." : "로그인"}
         </AuthButton>
+
+        <div className="flex items-center justify-center my-4">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <span className="px-4 text-sm text-gray-500">또는</span>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleDemoLogin}
+          disabled={isLoading}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-colors font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <span>데모 계정으로 로그인</span>
+        </button>
 
         <div className={auth.navigation.container}>
             <div className={auth.navigation.centerLinks}>

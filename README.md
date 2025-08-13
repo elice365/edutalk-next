@@ -1,36 +1,268 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# EduTalk 프로젝트 구조 다이어그램
 
-## Getting Started
+EduTalk은 실시간 채팅 기반의 교육 플랫폼으로, 강사와 학생 간의 원활한 소통을 지원하는 Next.js 애플리케이션입니다.
 
-First, run the development server:
+## 전체 시스템 아키텍처
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    EduTalk 플랫폼                           │
+├─────────────────────────────────────────────────────────────┤
+│  Frontend (Next.js 13+)                                    │
+│  ┌─────────────────┐  ┌─────────────────┐                  │
+│  │   메인 앱        │  │   API 문서       │                  │
+│  │   /app/(main)   │  │   /app/(doc)    │                  │
+│  └─────────────────┘  └─────────────────┘                  │
+├─────────────────────────────────────────────────────────────┤
+│  Backend (API Routes)                                      │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │   인증    │ │   채팅    │ │  공지사항  │ │   도구    │      │
+│  │ /api/auth│ │/api/chat │ │/api/notice│ │/api/docs │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+├─────────────────────────────────────────────────────────────┤
+│  데이터 저장소                                               │
+│  ┌─────────────┐              ┌─────────────┐              │
+│  │ PostgreSQL  │              │  MongoDB    │              │
+│  │ (사용자정보) │              │ (채팅메시지) │              │
+│  │   Prisma    │              │   Native    │              │
+│  └─────────────┘              └─────────────┘              │
+├─────────────────────────────────────────────────────────────┤
+│  외부 서비스                                                 │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │  Supabase   │  │  AWS SES    │  │   Vercel    │        │
+│  │ (실시간통신) │  │ (이메일발송) │  │   (배포)     │        │
+│  └─────────────┘  └─────────────┘  └─────────────┘        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 디렉토리 구조
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```
+edutalk-next/
+├── app/                        # Next.js App Router
+│   ├── (main)/                # 메인 애플리케이션
+│   │   ├── layout.js          # 공통 레이아웃 + 헤더
+│   │   ├── page.js            # 홈페이지
+│   │   ├── auth/              # 인증 페이지
+│   │   │   ├── login/         # 로그인
+│   │   │   ├── register/      # 회원가입
+│   │   │   └── find/          # 비밀번호 찾기
+│   │   └── chat/              # 채팅 페이지
+│   └── (doc)/                 # 문서 애플리케이션
+│       ├── layout.js          # 문서 전용 레이아웃
+│       └── docs/              # API 문서
+├── components/                # React 컴포넌트
+│   ├── layout/                # 레이아웃 컴포넌트
+│   ├── page/                  # 페이지별 컴포넌트
+│   ├── provider/              # Context Provider
+│   └── ui/                    # 재사용 UI 컴포넌트
+├── hooks/                     # 커스텀 Hook
+├── utils/                     # 유틸리티 함수
+├── styles/                    # CSS-in-JS 스타일
+├── constants/                 # 상수 정의
+├── types/                     # TypeScript 타입
+├── middleware/                # 미들웨어
+└── prisma/                    # 데이터베이스 스키마
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 주요 기능별 구성도
 
-## Learn More
+### 1. 인증 시스템
 
-To learn more about Next.js, take a look at the following resources:
+```
+사용자 인증 흐름
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   회원가입   │ -> │  이메일인증  │ -> │    로그인    │
+│/auth/register│    │/api/verify │    │ /auth/login │
+└─────────────┘    └─────────────┘    └─────────────┘
+        │                  │                  │
+        v                  v                  v
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   데이터     │    │   이메일     │    │   JWT       │
+│   저장       │    │   발송       │    │   토큰생성   │
+│ PostgreSQL  │    │  AWS SES    │    │   (RSA)     │
+└─────────────┘    └─────────────┘    └─────────────┘
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 2. 채팅 시스템
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+실시간 채팅 흐름
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   메시지     │ -> │   실시간     │ -> │   상대방     │
+│   전송       │    │   브로드캐스트│    │   수신       │
+│  /api/chat  │    │  Supabase   │    │  Frontend   │
+└─────────────┘    └─────────────┘    └─────────────┘
+        │                               │
+        v                               v
+┌─────────────┐                ┌─────────────┐
+│   메시지     │                │   읽음상태   │
+│   저장       │                │   업데이트   │
+│  MongoDB    │                │ mark-read   │
+└─────────────┘                └─────────────┘
+```
 
-## Deploy on Vercel
+### 3. 데이터 저장 구조
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+데이터베이스 분산 저장
+┌─────────────────────────────────────────────────┐
+│              PostgreSQL (Prisma)               │
+├─────────────────────────────────────────────────┤
+│  Contractor  │  Chat     │  Notice             │
+│  사용자정보   │  채팅방    │  공지사항            │
+│  - email     │  - uid    │  - title            │
+│  - identity  │  - name   │  - content          │
+│  - userType  │  - type   │  - priority         │
+└─────────────────────────────────────────────────┘
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+┌─────────────────────────────────────────────────┐
+│               MongoDB (Native)                  │
+├─────────────────────────────────────────────────┤
+│              chat_{identity}                    │
+│  메시지 컬렉션 (조직별 분리)                      │
+│  - chatRoomId                                   │
+│  - messages[]                                   │
+│    - sequence                                   │
+│    - senderId                                   │
+│    - content                                    │
+│    - timestamp                                  │
+└─────────────────────────────────────────────────┘
+```
+
+## 컴포넌트 구성도
+
+### Frontend 컴포넌트 계층
+
+```
+App Layout
+├── AuthProvider (인증 상태 관리)
+│   └── ChatProvider (채팅 상태 관리)
+│       └── Main Layout
+│           ├── Header
+│           │   ├── Logo
+│           │   ├── Navigation
+│           │   └── UserMenu (조건부)
+│           └── Page Content
+│               ├── Landing (홈)
+│               ├── Auth Pages
+│               │   ├── Login
+│               │   ├── Register
+│               │   └── Find
+│               └── Chat
+│                   ├── ChatList
+│                   ├── MessageArea
+│                   └── InputArea
+```
+
+### API 라우트 구성
+
+```
+API Routes (/app/api/)
+├── auth/                    # 인증 관련
+│   ├── login/              # 로그인 처리
+│   ├── register/           # 회원가입 처리  
+│   ├── reset/              # 비밀번호 재설정
+│   └── verify/             # 이메일 인증
+├── chat/                   # 채팅 관련
+│   ├── route.js           # 메시지 CRUD
+│   ├── messages/          # 메시지 조회
+│   └── mark-read/         # 읽음 처리
+├── notices/               # 공지사항 관리
+├── docs/                  # 개발자 도구
+│   ├── generate-keys/     # RSA 키 생성
+│   └── generate-token/    # JWT 토큰 생성
+└── health/                # 시스템 상태 확인
+```
+
+## 기술 스택 구성
+
+### Core Technologies
+```
+Frontend Framework    Next.js 15.4.5 (App Router)
+UI Framework         React 19.1.0
+Styling              Tailwind CSS + CSS-in-JS
+Animation            Framer Motion
+TypeScript           5.9.2
+```
+
+### Backend & Database  
+```
+ORM                  Prisma (PostgreSQL)
+Database             PostgreSQL + MongoDB
+Authentication       JWT (RSA 키페어)
+Real-time            Supabase Realtime
+Email Service        Nodemailer + AWS SES
+```
+
+### Development & Deployment
+```
+Development          Turbopack
+Linting              ESLint
+Deployment           Vercel
+Environment          Node.js
+```
+
+## 보안 구성
+
+```
+보안 계층
+┌─────────────────────────────────────────────────┐
+│  Frontend Security                              │
+│  ┌─────────────┐  ┌─────────────┐              │
+│  │  토큰저장    │  │  CSRF 방어   │              │
+│  │ localStorage│  │    Origin    │              │
+│  └─────────────┘  └─────────────┘              │
+├─────────────────────────────────────────────────┤
+│  API Security                                  │
+│  ┌─────────────┐  ┌─────────────┐              │
+│  │  JWT 인증    │  │  권한 검증   │              │
+│  │   Middleware│  │withAuth/Admin│              │
+│  └─────────────┘  └─────────────┘              │
+├─────────────────────────────────────────────────┤
+│  Data Security                                 │
+│  ┌─────────────┐  ┌─────────────┐              │
+│  │ 비밀번호암호화│  │  이메일인증  │              │
+│  │ argon2/bcrypt│  │   필수인증   │              │
+│  └─────────────┘  └─────────────┘              │
+└─────────────────────────────────────────────────┘
+```
+
+## 배포 아키텍처
+
+```
+배포 환경 (Vercel)
+┌─────────────────────────────────────────────────┐
+│  Production Environment                         │
+│  ┌─────────────┐  ┌─────────────┐              │
+│  │   Static    │  │    API      │              │
+│  │   Assets    │  │   Routes    │              │
+│  │   (CDN)     │  │(Serverless) │              │
+│  └─────────────┘  └─────────────┘              │
+├─────────────────────────────────────────────────┤
+│  External Services                              │
+│  ┌─────────────┐  ┌─────────────┐              │
+│  │  Database   │  │  Real-time  │              │
+│  │  Supabase   │  │  Supabase   │              │
+│  └─────────────┘  └─────────────┘              │
+└─────────────────────────────────────────────────┘
+```
+
+## 개발 도구 및 유틸리티
+
+### 내장 개발자 도구
+- **API 문서화**: 자체 제작 API 문서 페이지
+- **API 테스터**: 실시간 API 테스트 도구  
+- **RSA 키 생성기**: JWT 서명용 키페어 생성
+- **토큰 생성기**: 개발/테스트용 JWT 토큰 생성
+- **헬스체크**: 데이터베이스 연결 상태 모니터링
+
+### 코드 품질 관리
+- **타입 안전성**: TypeScript + 타입 정의
+- **코드 스타일**: ESLint 규칙
+- **에러 처리**: 계층화된 에러 핸들링
+- **성능 최적화**: Next.js 최적화 기능 활용
+
+---
+
+이 프로젝트는 현대적인 교육 기술 스택을 활용하여 구축된 실시간 소통 중심의 교육 플랫폼입니다. 확장성과 유지보수성을 고려한 모듈화된 아키텍처를 통해 안정적이고 사용자 친화적인 서비스를 제공합니다.

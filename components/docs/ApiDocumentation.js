@@ -15,66 +15,6 @@ const ApiDocumentation = memo(() => {
 
   const sections = [
     {
-      id: 'auth',
-      title: '🔐 사용자 인증',
-      endpoints: [
-        {
-          method: 'POST',
-          path: '/api/login',
-          description: '사용자 인증 및 JWT 토큰 받기',
-          auth: false,
-          body: [
-            { name: 'email', type: 'string', required: true, description: '사용자 이메일 주소' },
-            { name: 'password', type: 'string', required: true, description: '사용자 비밀번호' },
-          ],
-          response: {
-            success: true,
-            token: 'jwt-token-here',
-            contractor: { uid: 'uuid', identy: 'identity', email: 'user@example.com' }
-          }
-        },
-        {
-          method: 'POST',
-          path: '/api/register',
-          description: '새 계약자 계정 등록',
-          auth: false,
-          body: [
-            { name: 'email', type: 'string', required: true, description: '이메일 주소' },
-            { name: 'password', type: 'string', required: true, description: '비밀번호 (최소 8자)' },
-            { name: 'identy', type: 'string', required: true, description: '고유 계약자 식별자' },
-            { name: 'origin', type: 'string', required: false, description: '등록 출처' },
-          ],
-          response: {
-            success: true,
-            message: 'Registration successful',
-            contractor: { uid: 'uuid', identy: 'identity', email: 'user@example.com' },
-            emailSent: true
-          }
-        },
-        {
-          method: 'POST',
-          path: '/api/reset',
-          description: '비밀번호 재설정 요청 또는 토큰으로 재설정',
-          auth: false,
-          body: [
-            { name: 'email', type: 'string', required: true, description: '재설정할 이메일' },
-            { name: 'token', type: 'string', required: false, description: '재설정 토큰 (비밀번호 변경용)' },
-            { name: 'newPassword', type: 'string', required: false, description: '새 비밀번호 (토큰과 함께)' },
-          ]
-        },
-        {
-          method: 'GET',
-          path: '/api/verify',
-          description: '이메일 주소 인증',
-          auth: false,
-          params: [
-            { name: 'email', type: 'string', required: true, description: '인증할 이메일' },
-            { name: 'token', type: 'string', required: true, description: '인증 토큰' },
-          ]
-        },
-      ]
-    },
-    {
       id: 'chat',
       title: '💬 채팅 작업',
       endpoints: [
@@ -157,45 +97,47 @@ const ApiDocumentation = memo(() => {
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900">API 문서</h2>
-        <p className="mt-2 text-gray-600">
+    <div className="space-y-3 sm:space-y-6">
+      <div className="text-center px-2">
+        <h2 className="text-lg sm:text-2xl font-bold text-gray-900 mb-2">API 문서</h2>
+        <p className="text-xs sm:text-base text-gray-600 leading-relaxed max-w-2xl mx-auto">
           Edutalk API 모든 엔드포인트에 대한 완전한 참조 가이드
         </p>
       </div>
 
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 shadow-sm">
-        <div className="flex items-center space-x-2 mb-3">
-          <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg sm:rounded-xl p-3 sm:p-6 shadow-sm mx-2 sm:mx-0">
+        <div className="flex items-start sm:items-center space-x-2 mb-2 sm:mb-3">
+          <div className="w-4 h-4 sm:w-6 sm:h-6 bg-blue-100 rounded-md sm:rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 sm:mt-0">
+            <svg className="w-2.5 h-2.5 sm:w-4 sm:h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 0h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
-          <h3 className="font-semibold text-blue-900">인증 방법</h3>
+          <h3 className="text-xs sm:text-base font-semibold text-blue-900 flex-1">인증 방법</h3>
         </div>
-        <p className="text-sm text-blue-700 mb-3">
+        <p className="text-xs sm:text-sm text-blue-700 mb-2 sm:mb-3 leading-relaxed pl-0 sm:pl-0">
           인증이 필요한 모든 엔드포인트는 Authorization 헤더에 JWT 토큰이 필요합니다:
         </p>
-        <code className="block p-3 bg-white rounded-lg text-sm font-mono border shadow-sm">
-          Authorization: Bearer &lt;당신의-jwt-토큰&gt;
-        </code>
+        <div className="bg-white rounded-md sm:rounded-lg border shadow-sm overflow-hidden">
+          <code className="block p-2 sm:p-3 text-xs sm:text-sm font-mono text-gray-800 break-all leading-relaxed">
+            Authorization: Bearer &lt;당신의-jwt-토큰&gt;
+          </code>
+        </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4 mx-2 sm:mx-0">
         {sections.map((section) => (
-          <div key={section.id} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+          <div key={section.id} className="bg-white rounded-lg sm:rounded-xl shadow-lg overflow-hidden border border-gray-100">
             <button
               onClick={() => toggleSection(section.id)}
-              className="w-full px-6 py-4 text-left bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-200 flex items-center justify-between"
+              className="w-full px-3 sm:px-6 py-2.5 sm:py-4 text-left bg-gradient-to-r from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 transition-all duration-200 flex items-center justify-between"
             >
-              <h3 className="text-lg font-semibold text-gray-800">{section.title}</h3>
-              <div className="flex items-center space-x-2">
-                <span className="text-xs bg-primary-100 text-primary-700 px-2 py-1 rounded-full font-medium">
-                  {section.endpoints.length}개 엔드포인트
+              <h3 className="text-sm sm:text-lg font-semibold text-gray-800 pr-2 flex-1 min-w-0">{section.title}</h3>
+              <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+                <span className="text-xs bg-primary-100 text-primary-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full font-medium whitespace-nowrap">
+                  {section.endpoints.length}개
                 </span>
                 <svg
-                  className={`w-5 h-5 transform transition-transform duration-200 text-gray-500 ${expandedSection === section.id ? 'rotate-180' : ''}`}
+                  className={`w-3.5 h-3.5 sm:w-5 sm:h-5 transform transition-transform duration-200 text-gray-500 flex-shrink-0 ${expandedSection === section.id ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -213,11 +155,11 @@ const ApiDocumentation = memo(() => {
                 className="border-t border-gray-200"
               >
                 {section.endpoints.map((endpoint, index) => (
-                  <div key={index} className="p-6 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
+                  <div key={index} className="p-3 sm:p-6 border-b border-gray-100 last:border-b-0 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex flex-col space-y-2 mb-3 sm:mb-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-1.5 sm:space-y-0 sm:space-x-3">
                         <span className={`
-                          px-3 py-1 text-sm font-mono rounded font-medium
+                          px-2 sm:px-3 py-1 text-xs sm:text-sm font-mono rounded font-medium inline-block w-fit flex-shrink-0
                           ${endpoint.method === 'GET' ? 'bg-green-100 text-green-700' :
                             endpoint.method === 'POST' ? 'bg-blue-100 text-blue-700' :
                             endpoint.method === 'PUT' ? 'bg-yellow-100 text-yellow-700' :
@@ -226,29 +168,31 @@ const ApiDocumentation = memo(() => {
                         `}>
                           {endpoint.method}
                         </span>
-                        <code className="text-sm font-mono text-gray-700">{endpoint.path}</code>
+                        <code className="text-xs sm:text-sm font-mono text-gray-700 break-all bg-gray-50 px-2 py-1 rounded">{endpoint.path}</code>
                       </div>
                       {endpoint.auth && (
-                        <span className="px-3 py-1 text-xs bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700 rounded-full font-medium border border-orange-200">
-                          🔐 인증 필요
-                        </span>
+                        <div className="flex justify-start">
+                          <span className="px-2 sm:px-3 py-1 text-xs bg-gradient-to-r from-yellow-100 to-orange-100 text-orange-700 rounded-full font-medium border border-orange-200 inline-flex items-center">
+                            🔐 인증 필요
+                          </span>
+                        </div>
                       )}
                     </div>
 
-                    <p className="text-gray-600 mb-4">{endpoint.description}</p>
+                    <p className="text-xs sm:text-base text-gray-600 mb-3 sm:mb-4 leading-relaxed">{endpoint.description}</p>
 
                     {endpoint.params && (
-                      <div className="mb-4">
-                        <h4 className="font-semibold text-sm text-gray-700 mb-2">쿼리 매개변수</h4>
-                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 space-y-3 border border-gray-200">
+                      <div className="mb-3 sm:mb-4">
+                        <h4 className="font-semibold text-xs sm:text-sm text-gray-700 mb-2">쿼리 매개변수</h4>
+                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-md sm:rounded-lg p-2 sm:p-4 space-y-2 sm:space-y-3 border border-gray-200">
                           {endpoint.params.map((param, i) => (
-                            <div key={i} className="text-sm bg-white rounded-lg p-3 shadow-sm">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className="font-mono text-blue-600 font-medium">{param.name}</span>
-                                <span className="text-gray-500 text-xs bg-gray-100 px-2 py-0.5 rounded">({param.type})</span>
-                                {param.required && <span className="text-red-500 text-xs bg-red-50 px-2 py-0.5 rounded font-medium">*</span>}
+                            <div key={i} className="text-xs sm:text-sm bg-white rounded-md sm:rounded-lg p-2 sm:p-3 shadow-sm">
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
+                                <span className="font-mono text-blue-600 font-medium text-xs sm:text-sm">{param.name}</span>
+                                <span className="text-gray-500 text-xs bg-gray-100 px-1.5 sm:px-2 py-0.5 rounded">({param.type})</span>
+                                {param.required && <span className="text-red-500 text-xs bg-red-50 px-1.5 sm:px-2 py-0.5 rounded font-medium">*</span>}
                               </div>
-                              <p className="text-gray-600 text-xs">{param.description}</p>
+                              <p className="text-gray-600 text-xs leading-relaxed">{param.description}</p>
                             </div>
                           ))}
                         </div>
@@ -256,17 +200,17 @@ const ApiDocumentation = memo(() => {
                     )}
 
                     {endpoint.body && (
-                      <div className="mb-4">
-                        <h4 className="font-semibold text-sm text-gray-700 mb-2">요청 본문</h4>
-                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 space-y-3 border border-gray-200">
+                      <div className="mb-3 sm:mb-4">
+                        <h4 className="font-semibold text-xs sm:text-sm text-gray-700 mb-2">요청 본문</h4>
+                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-md sm:rounded-lg p-2 sm:p-4 space-y-2 sm:space-y-3 border border-gray-200">
                           {endpoint.body.map((field, i) => (
-                            <div key={i} className="text-sm bg-white rounded-lg p-3 shadow-sm">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className="font-mono text-blue-600 font-medium">{field.name}</span>
-                                <span className="text-gray-500 text-xs bg-gray-100 px-2 py-0.5 rounded">({field.type})</span>
-                                {field.required && <span className="text-red-500 text-xs bg-red-50 px-2 py-0.5 rounded font-medium">*</span>}
+                            <div key={i} className="text-xs sm:text-sm bg-white rounded-md sm:rounded-lg p-2 sm:p-3 shadow-sm">
+                              <div className="flex flex-wrap items-center gap-1 sm:gap-2 mb-1">
+                                <span className="font-mono text-blue-600 font-medium text-xs sm:text-sm">{field.name}</span>
+                                <span className="text-gray-500 text-xs bg-gray-100 px-1.5 sm:px-2 py-0.5 rounded">({field.type})</span>
+                                {field.required && <span className="text-red-500 text-xs bg-red-50 px-1.5 sm:px-2 py-0.5 rounded font-medium">*</span>}
                               </div>
-                              <p className="text-gray-600 text-xs">{field.description}</p>
+                              <p className="text-gray-600 text-xs leading-relaxed">{field.description}</p>
                             </div>
                           ))}
                         </div>
@@ -275,18 +219,20 @@ const ApiDocumentation = memo(() => {
 
                     {endpoint.response && (
                       <div>
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-sm text-gray-700">응답 예제</h4>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 space-y-2 sm:space-y-0">
+                          <h4 className="font-semibold text-xs sm:text-sm text-gray-700">응답 예제</h4>
                           <button
                             onClick={() => copyCode(JSON.stringify(endpoint.response, null, 2), `${section.id}-${index}`)}
-                            className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors font-medium"
+                            className="px-2 sm:px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md sm:rounded-lg transition-colors font-medium w-fit"
                           >
                             {copiedCode === `${section.id}-${index}` ? '✓ 복사됨' : '📋 복사'}
                           </button>
                         </div>
-                        <pre className="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-4 rounded-lg text-xs overflow-x-auto shadow-inner border border-gray-700">
-                          {JSON.stringify(endpoint.response, null, 2)}
-                        </pre>
+                        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-md sm:rounded-lg shadow-inner border border-gray-700 overflow-hidden">
+                          <pre className="text-gray-100 p-2 sm:p-4 text-xs overflow-x-auto leading-relaxed">
+                            {JSON.stringify(endpoint.response, null, 2)}
+                          </pre>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -310,36 +256,7 @@ const ApiDocumentation = memo(() => {
           <div>
             <h4 className="font-medium text-gray-700 mb-3 flex items-center space-x-2">
               <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">1</span>
-              <span>회원가입 및 로그인</span>
-            </h4>
-            <pre className="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto shadow-inner border border-gray-700">
-{`// 회원가입
-fetch('/api/register', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    email: 'user@example.com',
-    password: 'securePassword',
-    identy: 'unique-contractor-id'
-  })
-});
-
-// 로그인
-const response = await fetch('/api/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    email: 'user@example.com',
-    password: 'securePassword'
-  })
-});
-const { token } = await response.json();`}</pre>
-          </div>
-
-          <div>
-            <h4 className="font-medium text-gray-700 mb-3 flex items-center space-x-2">
-              <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
-              <span>인증된 요청 보내기</span>
+              <span>채팅 메시지 전송</span>
             </h4>
             <pre className="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto shadow-inner border border-gray-700">
 {`fetch('/api/chat', {
@@ -353,6 +270,20 @@ const { token } = await response.json();`}</pre>
     id: 'chat-id',
     message: '안녕하세요!'
   })
+});`}</pre>
+          </div>
+
+          <div>
+            <h4 className="font-medium text-gray-700 mb-3 flex items-center space-x-2">
+              <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
+              <span>공지사항 조회</span>
+            </h4>
+            <pre className="bg-gradient-to-br from-gray-900 to-gray-800 text-gray-100 p-4 rounded-lg text-sm overflow-x-auto shadow-inner border border-gray-700">
+{`fetch('/api/notice?identy=contractor-id', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });`}</pre>
           </div>
         </div>
