@@ -26,12 +26,39 @@ const ApiDocumentation = memo(() => {
           body: [
             { name: 'type', type: 'string', required: true, description: '작업 유형: send, file, delete, list' },
             { name: 'id', type: 'string', required: false, description: '채팅 또는 메시지 ID' },
-            { name: 'message', type: 'string', required: false, description: '메시지 내용 (전솨용)' },
+            { name: 'message', type: 'string', required: false, description: '메시지 내용 (전송용)' },
             { name: 'file', type: 'string', required: false, description: '파일 데이터 (파일 업로드용)' },
           ],
           response: {
             success: true,
-            chat: { uid: 'chat-id', lastChat: 'message', updateTime: '2024-01-01T00:00:00Z' }
+            chat: { uid: 'chat-id', lastChat: 'message', updateTime: '2024-01-01T00:00:00Z' },
+            messageInfo: { uid: 'msg-id', content: 'message', timestamp: '2024-01-01T00:00:00Z' }
+          }
+        },
+        {
+          method: 'GET',
+          path: '/api/chat/messages',
+          description: '채팅방 메시지 히스토리 조회',
+          auth: true,
+          params: [
+            { name: 'chatRoomId', type: 'string', required: true, description: '조회할 채팅방 ID' },
+            { name: 'limit', type: 'number', required: false, description: '가져올 메시지 수 (기본: 50)' },
+            { name: 'offset', type: 'number', required: false, description: '건너뛸 메시지 수 (페이징용)' },
+          ],
+          response: {
+            success: true,
+            messages: [
+              {
+                messageUid: 'msg_123456',
+                senderId: 'user_123',
+                senderName: '홍길동',
+                content: '안녕하세요',
+                timestamp: '2024-01-01T00:00:00Z',
+                read: true,
+                sequence: 1
+              }
+            ],
+            total: 10
           }
         },
       ]
@@ -86,6 +113,24 @@ const ApiDocumentation = memo(() => {
             notices: [
               { uid: 'notice-id', title: 'Notice', context: 'Content', createTime: '2024-01-01T00:00:00Z' }
             ]
+          }
+        },
+      ]
+    },
+    {
+      id: 'system',
+      title: '🔧 시스템 모니터링',
+      endpoints: [
+        {
+          method: 'GET',
+          path: '/api/health',
+          description: '시스템 상태 및 데이터베이스 연결 확인',
+          auth: false,
+          response: {
+            status: 'healthy',
+            mongodb: { status: 'connected', responseTime: 45 },
+            supabase: { status: 'connected', responseTime: 23 },
+            timestamp: '2024-01-01T00:00:00Z'
           }
         },
       ]
