@@ -237,14 +237,16 @@ export const useChat = (user, selectedChatUser, token) => {
     if (!ALLOWED_FILE_TYPES[file.type]) {
       const allowedExtensions = Object.values(ALLOWED_FILE_TYPES).join(', ');
       console.error(`지원하지 않는 파일 형식입니다: ${file.type}`);
+      // TODO: Replace alert() with toast notification for better UX
       alert(`지원하지 않는 파일 형식입니다.\n\n허용된 파일 형식:\n${allowedExtensions}`);
       return;
     }
 
-    // 파일 크기 제한 (10MB)
-    const maxSize = 10 * 1024 * 1024;
-    if (file.size > maxSize) {
+    // 파일 크기 제한
+    const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
       console.error('파일 크기가 너무 큽니다. 최대 10MB까지 업로드 가능합니다.');
+      // TODO: Replace alert() with toast notification for better UX
       alert('파일 크기가 너무 큽니다.\n최대 10MB까지 업로드 가능합니다.');
       return;
     }
@@ -270,7 +272,9 @@ export const useChat = (user, selectedChatUser, token) => {
     }));
 
     try {
-      // Base64로 파일 인코딩
+      // TODO: Refactor to use multipart/form-data instead of Base64 encoding
+      // Base64 encoding increases file size by ~33% and uses more memory
+      // This is inefficient for large files and may hit server request body limits
       const reader = new FileReader();
       const fileData = await new Promise((resolve, reject) => {
         reader.onload = () => resolve(reader.result);
@@ -361,6 +365,7 @@ export const useChat = (user, selectedChatUser, token) => {
 
     } catch (error) {
       console.error('메시지 삭제 오류:', error);
+      // TODO: Replace alert() with toast notification for better UX
       alert(error.response?.data?.error || error.message || '메시지 삭제에 실패했습니다.');
     }
   }, [currentChatUser.chatId, setMessagesHistory, isLoading, token]);
