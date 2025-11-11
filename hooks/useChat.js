@@ -211,10 +211,41 @@ export const useChat = (user, selectedChatUser, token) => {
   const handleAttachment = useCallback(async (file) => {
     if (!file || isLoading) return;
 
+    // 허용된 파일 타입 정의
+    const ALLOWED_FILE_TYPES = {
+      // 이미지
+      'image/jpeg': '.jpg, .jpeg',
+      'image/png': '.png',
+      'image/gif': '.gif',
+      'image/webp': '.webp',
+      // 문서
+      'application/pdf': '.pdf',
+      'application/msword': '.doc',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+      'application/vnd.ms-excel': '.xls',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+      'application/vnd.ms-powerpoint': '.ppt',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+      // 텍스트
+      'text/plain': '.txt',
+      // 압축
+      'application/zip': '.zip',
+      'application/x-rar-compressed': '.rar'
+    };
+
+    // 파일 타입 검증
+    if (!ALLOWED_FILE_TYPES[file.type]) {
+      const allowedExtensions = Object.values(ALLOWED_FILE_TYPES).join(', ');
+      console.error(`지원하지 않는 파일 형식입니다: ${file.type}`);
+      alert(`지원하지 않는 파일 형식입니다.\n\n허용된 파일 형식:\n${allowedExtensions}`);
+      return;
+    }
+
     // 파일 크기 제한 (10MB)
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       console.error('파일 크기가 너무 큽니다. 최대 10MB까지 업로드 가능합니다.');
+      alert('파일 크기가 너무 큽니다.\n최대 10MB까지 업로드 가능합니다.');
       return;
     }
 

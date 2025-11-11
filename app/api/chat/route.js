@@ -239,13 +239,54 @@ async function handler(req) {
           );
         }
 
-        // In production, implement message deletion from messages table
-        // For now, just return success
-        
-        return NextResponse.json({
-          success: true,
-          message: 'Message deleted'
-        });
+        try {
+          // MongoDB에서 메시지 조회 (권한 확인을 위해)
+          const collection = await (await import('@/utils/mongodb')).getChatCollection(identy);
+
+          // messages.uid로 해당 메시지가 포함된 채팅방 찾기
+          const chatRoom = await collection.findOne(
+            { 'messages.uid': id },
+            { projection: { messages: { $elemMatch: { uid: id } }, _id: 1 } }
+          );
+
+          if (!chatRoom || !chatRoom.messages || chatRoom.messages.length === 0) {
+            return NextResponse.json(
+              { error: 'Message not found' },
+              { status: 404 }
+            );
+          }
+
+          const message = chatRoom.messages[0];
+
+          // 권한 확인: 메시지 작성자만 삭제 가능
+          if (message.senderId !== userId) {
+            return NextResponse.json(
+              { error: 'You can only delete your own messages' },
+              { status: 403 }
+            );
+          }
+
+          // 메시지 삭제 실행
+          const { deleteMessage } = await import('@/utils/mongodb');
+          const deleted = await deleteMessage(id, identy);
+
+          if (!deleted) {
+            throw new Error('Failed to delete message');
+          }
+
+          console.log(`Message deleted: ${id} by user ${userId}`);
+
+          return NextResponse.json({
+            success: true,
+            message: 'Message deleted successfully'
+          });
+        } catch (error) {
+          console.error('Message deletion error:', error);
+          return NextResponse.json(
+            { error: error.message || 'Failed to delete message' },
+            { status: 500 }
+          );
+        }
       }
 
       case 'list': {
