@@ -152,8 +152,18 @@ async function handler(req) {
 
         // Broadcast message via Supabase Realtime
         try {
-          // TODO: Add avatar support when Contractor model includes avatar field
-          const userAvatar = null;
+          // Get user avatar from Contractor model
+          let userAvatar = null;
+          try {
+            const contractor = await prisma.contractor.findUnique({
+              where: { uid: userId },
+              select: { avatar: true }
+            });
+            userAvatar = contractor?.avatar || null;
+          } catch (avatarError) {
+            console.warn('Failed to fetch user avatar:', avatarError);
+            // Continue without avatar
+          }
 
           const realtimeMessage = {
             uid: messageUID,
@@ -165,7 +175,7 @@ async function handler(req) {
             timestamp: storedMessage?.createdAt || new Date().toISOString(),
             sequence: storedMessage?.sequence || 1,
             read: false,
-            avatar: userAvatar // 추후 확장 가능
+            avatar: userAvatar
           };
           
           await realtimeChat.broadcastMessage(chat.uid, realtimeMessage);

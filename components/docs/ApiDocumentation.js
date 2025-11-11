@@ -118,6 +118,52 @@ const ApiDocumentation = memo(() => {
       ]
     },
     {
+      id: 'profile',
+      title: '👤 프로필 관리',
+      endpoints: [
+        {
+          method: 'GET',
+          path: '/api/profile/avatar',
+          description: '사용자 아바타 조회',
+          auth: true,
+          response: {
+            success: true,
+            avatar: 'https://example.com/avatar.jpg',
+            name: '홍길동',
+            email: 'user@example.com'
+          }
+        },
+        {
+          method: 'POST',
+          path: '/api/profile/avatar',
+          description: '아바타 업로드 또는 URL 설정',
+          auth: true,
+          contentType: 'multipart/form-data 또는 application/json',
+          body: [
+            { name: 'avatar', type: 'File', required: false, description: '이미지 파일 (multipart/form-data, max 2MB)' },
+            { name: 'avatarUrl', type: 'string', required: false, description: '외부 이미지 URL (JSON)' },
+          ],
+          response: {
+            success: true,
+            message: 'Avatar updated successfully',
+            avatar: 'data:image/jpeg;base64,...',
+            name: '홍길동',
+            email: 'user@example.com'
+          }
+        },
+        {
+          method: 'DELETE',
+          path: '/api/profile/avatar',
+          description: '아바타 제거',
+          auth: true,
+          response: {
+            success: true,
+            message: 'Avatar removed successfully'
+          }
+        },
+      ]
+    },
+    {
       id: 'system',
       title: '🔧 시스템 모니터링',
       endpoints: [
