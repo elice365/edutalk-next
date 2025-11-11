@@ -25,8 +25,26 @@ async function handler(req) {
   }
 
   try {
-    const body = await req.json();
-    const { type, id, message, file } = body;
+    // Content-Type에 따라 다르게 파싱
+    const contentType = req.headers.get('content-type') || '';
+    let body, type, id, message, file, fileName, fileType, fileSize;
+
+    if (contentType.includes('multipart/form-data')) {
+      // multipart/form-data 처리 (파일 업로드)
+      const formData = await req.formData();
+      type = formData.get('type');
+      id = formData.get('id');
+      message = formData.get('message');
+      file = formData.get('file'); // File 객체
+      fileName = formData.get('fileName');
+      fileType = formData.get('fileType');
+      fileSize = formData.get('fileSize');
+    } else {
+      // JSON 처리 (일반 메시지, 삭제 등)
+      body = await req.json();
+      ({ type, id, message, file } = body);
+    }
+
     const { identy, sub: userId, name: userName, type: userType } = req.user;
 
     switch (type) {
@@ -191,7 +209,7 @@ async function handler(req) {
         }
 
         // Verify user is part of this chat
-        const isParticipant = 
+        const isParticipant =
           (userType === 'teacher' && chat.instructorID === userId) ||
           (userType === 'student' && chat.studentID === userId);
 
@@ -202,13 +220,26 @@ async function handler(req) {
           );
         }
 
-        // In production, handle file upload to storage service
-        // and save file reference to database
+        // multipart/form-data로 받은 파일 처리
+        let fileData;
+        if (file instanceof File) {
+          // File 객체를 Base64로 변환 (기존 시스템과 호환성 유지)
+          const arrayBuffer = await file.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const base64 = buffer.toString('base64');
+          fileData = `data:${fileType || file.type};base64,${base64}`;
+        } else {
+          // 이미 Base64 문자열인 경우 (하위 호환성)
+          fileData = file;
+        }
+
+        // TODO: 향후 개선 - 파일 스토리지 서비스(S3, Cloudinary 등)에 업로드하고 URL만 저장
+        // 현재는 Base64로 변환하여 저장 (메모리/DB 크기 비효율적)
 
         const updatedChat = await prisma.chat.update({
           where: { uid: id },
           data: {
-            lastChat: '[File uploaded]',
+            lastChat: `[파일: ${fileName || file.name || 'unknown'}]`,
             lastChatSender: userType === 'teacher' ? 'instructor' : 'student',
             updateTime: new Date()
           }
@@ -217,7 +248,8 @@ async function handler(req) {
         return NextResponse.json({
           success: true,
           message: 'File uploaded successfully',
-          chat: updatedChat
+          chat: updatedChat,
+          fileData // 클라이언트로 다시 전송 (필요시)
         });
       }
 
