@@ -3,9 +3,12 @@ import { api } from '@/utils/axios';
 import { useChatMessages } from './useChatMessages';
 import { useSupabaseRealtime } from './useSupabaseRealtime';
 import { getAvatarUrl } from '@/constants/defaults';
+import { realtimeChat } from '@/utils/supabase';
+import { useToast } from '@/components/provider/Toast';
 
 // 3. 채팅 관련 로직을 총괄하는 메인 커스텀 훅
 export const useChat = (user, selectedChatUser, token) => {
+  const toast = useToast();
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
@@ -84,15 +87,32 @@ export const useChat = (user, selectedChatUser, token) => {
   }, [setMessagesHistory, user, currentChatUser.chatId]);
 
   // 실시간 타이핑 이벤트 수신 처리
-  const handleOpponentTyping = useCallback(() => {
-    // TODO: 추가적인 타이핑 관련 로직
-  }, []);
+  const handleOpponentTyping = useCallback((isTyping) => {
+    // 타이핑 상태 변경에 대한 추가 로직 (예: 로깅, 분석 등)
+    if (isTyping) {
+      console.log(`${currentChatUser.name}님이 입력 중입니다...`);
+    }
+  }, [currentChatUser.name]);
+
+  // 메시지 삭제 이벤트 수신 처리
+  const handleMessageDeleted = useCallback((messageId, chatRoomId) => {
+    console.log('메시지 삭제:', messageId);
+
+    // 현재 채팅방의 메시지인 경우에만 처리
+    if (chatRoomId === currentChatUser.chatId) {
+      setMessagesHistory(prev => ({
+        ...prev,
+        [chatRoomId]: (prev[chatRoomId] || []).filter(msg => msg.id !== messageId)
+      }));
+    }
+  }, [currentChatUser.chatId, setMessagesHistory]);
 
   const { isOpponentTyping, sendTypingEvent } = useSupabaseRealtime(
     user,
     currentChatUser.chatId, // chatRoomId 전달
     handleNewMessage,
-    handleOpponentTyping
+    handleOpponentTyping,
+    handleMessageDeleted
   );
   
   // ------------------
@@ -189,10 +209,158 @@ export const useChat = (user, selectedChatUser, token) => {
     }
   }, [user, currentChatUser, setMessagesHistory, isLoading, setNewMessage, token]);
 
-  // 파일 첨부 핸들러 (현재는 콘솔 로그만 출력)
-  const handleAttachment = useCallback(() => {
-    // TODO: 파일 첨부 로직 구현
-  }, []);
+  // 파일 첨부 핸들러
+  const handleAttachment = useCallback(async (file) => {
+    if (!file || isLoading) return;
+
+    // 허용된 파일 타입 정의
+    const ALLOWED_FILE_TYPES = {
+      // 이미지
+      'image/jpeg': '.jpg, .jpeg',
+      'image/png': '.png',
+      'image/gif': '.gif',
+      'image/webp': '.webp',
+      // 문서
+      'application/pdf': '.pdf',
+      'application/msword': '.doc',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+      'application/vnd.ms-excel': '.xls',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
+      'application/vnd.ms-powerpoint': '.ppt',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation': '.pptx',
+      // 텍스트
+      'text/plain': '.txt',
+      // 압축
+      'application/zip': '.zip',
+      'application/x-rar-compressed': '.rar'
+    };
+
+    // 파일 타입 검증
+    if (!ALLOWED_FILE_TYPES[file.type]) {
+      const allowedExtensions = Object.values(ALLOWED_FILE_TYPES).join(', ');
+      console.error(`지원하지 않는 파일 형식입니다: ${file.type}`);
+      toast.error(`지원하지 않는 파일 형식입니다.\n\n허용된 파일 형식:\n${allowedExtensions}`, 6000);
+      return;
+    }
+
+    // 파일 크기 제한
+    const MAX_ATTACHMENT_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
+      console.error('파일 크기가 너무 큽니다. 최대 10MB까지 업로드 가능합니다.');
+      toast.error('파일 크기가 너무 큽니다.\n최대 10MB까지 업로드 가능합니다.');
+      return;
+    }
+
+    setIsLoading(true);
+    const tempId = Date.now() + Math.random();
+    const message = {
+      id: tempId,
+      sender: user?.name,
+      message: `[파일: ${file.name}]`,
+      timestamp: new Date(),
+      isOwn: true,
+      type: 'file',
+      avatar: getAvatarUrl(user?.avatar),
+      status: 'sending',
+      fileName: file.name
+    };
+
+    const chatKey = currentChatUser.chatId;
+    setMessagesHistory(prev => ({
+      ...prev,
+      [chatKey]: [...(prev[chatKey] || []), message]
+    }));
+
+    try {
+      // multipart/form-data를 사용한 효율적인 파일 업로드
+      const formData = new FormData();
+      formData.append('type', 'file');
+      formData.append('id', currentChatUser.chatId);
+      formData.append('file', file);
+      formData.append('fileName', file.name);
+      formData.append('fileType', file.type);
+      formData.append('fileSize', file.size.toString());
+
+      // 파일 업로드 API 호출
+      const response = await api.post('/api/chat', formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (response.status !== 200 || !response.data.success) {
+        throw new Error(response.data.error || '파일 업로드에 실패했습니다.');
+      }
+
+      // UI 업데이트
+      setMessagesHistory(prev => ({
+        ...prev,
+        [chatKey]: prev[chatKey].map(msg =>
+          msg.id === tempId ? { ...msg, status: 'delivered' } : msg
+        )
+      }));
+
+      // 사이드바 채팅 목록 업데이트
+      window.dispatchEvent(new CustomEvent('chatUpdated', {
+        detail: { chatUser: chatKey, lastChat: `[파일: ${file.name}]`, unreadCount: 0 }
+      }));
+
+    } catch (error) {
+      console.error('파일 업로드 오류:', error);
+      // 에러 UI 처리
+      setMessagesHistory(prev => ({
+        ...prev,
+        [chatKey]: prev[chatKey].map(msg =>
+          msg.id === tempId ? { ...msg, status: 'failed', errorMessage: error.response?.data?.error || error.message } : msg
+        )
+      }));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, currentChatUser, setMessagesHistory, isLoading, token]);
+
+  // 메시지 삭제 핸들러
+  const handleDeleteMessage = useCallback(async (messageId) => {
+    if (!messageId || isLoading) return;
+
+    const chatKey = currentChatUser.chatId;
+
+    try {
+      // 서버에 메시지 삭제 요청
+      const response = await api.post('/api/chat', {
+        type: 'delete',
+        id: messageId
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.status !== 200 || !response.data.success) {
+        throw new Error(response.data.error || '메시지 삭제에 실패했습니다.');
+      }
+
+      // UI에서 메시지 제거
+      setMessagesHistory(prev => ({
+        ...prev,
+        [chatKey]: (prev[chatKey] || []).filter(msg => msg.id !== messageId)
+      }));
+
+      // 실시간으로 다른 사용자에게 삭제 알림 (Supabase)
+      try {
+        await realtimeChat.broadcastMessageDeletion(chatKey, messageId);
+      } catch (realtimeError) {
+        console.error('실시간 삭제 알림 실패:', realtimeError);
+      }
+
+      console.log('메시지 삭제 완료:', messageId);
+
+    } catch (error) {
+      console.error('메시지 삭제 오류:', error);
+      toast.error(error.response?.data?.error || error.message || '메시지 삭제에 실패했습니다.');
+    }
+  }, [currentChatUser.chatId, setMessagesHistory, isLoading, token]);
 
   // 최종적으로 UI 컴포넌트에 전달할 값들을 반환합니다.
   return {
@@ -204,7 +372,8 @@ export const useChat = (user, selectedChatUser, token) => {
     setNewMessage,
     handleSendMessage,
     handleTyping: sendTypingEvent, // Supabase 훅에서 받은 함수를 그대로 전달
-    handleAttachment
+    handleAttachment,
+    handleDeleteMessage
   };
 };
 

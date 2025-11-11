@@ -1,8 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { realtimeChat } from '@/utils/supabase';
 
-// 2. Supabase 실시간 통신을 관리하는 커스텀 훅
-export const useSupabaseRealtime = (user, chatRoomId, onNewMessage, onTyping) => {
+/**
+ * Supabase 실시간 통신을 관리하는 커스텀 훅
+ * @param {Object} user - 현재 사용자 정보 ({ id, name })
+ * @param {string} chatRoomId - 현재 채팅방 ID
+ * @param {Function} onNewMessage - 새 메시지 수신 콜백
+ * @param {Function} onTyping - 타이핑 상태 변경 콜백
+ * @param {Function} onMessageDeleted - 메시지 삭제 콜백
+ * @returns {Object} { isOpponentTyping, sendTypingEvent }
+ */
+export const useSupabaseRealtime = (user, chatRoomId, onNewMessage, onTyping, onMessageDeleted) => {
   const subscriptionRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const [isOpponentTyping, setIsOpponentTyping] = useState(false);
@@ -56,7 +64,15 @@ export const useSupabaseRealtime = (user, chatRoomId, onNewMessage, onTyping) =>
       },
       
       onMessageDeleted: (deletionData) => {
-        // TODO: 메시지 삭제 처리 로직 추가
+        // 메시지 삭제 이벤트 처리
+        if (deletionData && deletionData.messageId) {
+          console.log('메시지 삭제 이벤트 수신:', deletionData);
+
+          // 외부에서 전달된 삭제 콜백 함수 호출
+          if (onMessageDeleted && typeof onMessageDeleted === 'function') {
+            onMessageDeleted(deletionData.messageId, deletionData.chatRoomId);
+          }
+        }
       },
       
       onError: (error) => {
@@ -74,7 +90,7 @@ export const useSupabaseRealtime = (user, chatRoomId, onNewMessage, onTyping) =>
         subscriptionRef.current.unsubscribe();
       }
     };
-  }, [user?.id, user?.name, chatRoomId, onNewMessage, onTyping]);
+  }, [user?.id, user?.name, chatRoomId, onNewMessage, onTyping, onMessageDeleted]);
 
   // 타이핑 이벤트를 Supabase 채널로 전송하는 함수
   const sendTypingEvent = async () => {

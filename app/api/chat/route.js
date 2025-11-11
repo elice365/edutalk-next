@@ -25,8 +25,26 @@ async function handler(req) {
   }
 
   try {
-    const body = await req.json();
-    const { type, id, message, file } = body;
+    // Content-Type에 따라 다르게 파싱
+    const contentType = req.headers.get('content-type') || '';
+    let body, type, id, message, file, fileName, fileType, fileSize;
+
+    if (contentType.includes('multipart/form-data')) {
+      // multipart/form-data 처리 (파일 업로드)
+      const formData = await req.formData();
+      type = formData.get('type');
+      id = formData.get('id');
+      message = formData.get('message');
+      file = formData.get('file'); // File 객체
+      fileName = formData.get('fileName');
+      fileType = formData.get('fileType');
+      fileSize = formData.get('fileSize');
+    } else {
+      // JSON 처리 (일반 메시지, 삭제 등)
+      body = await req.json();
+      ({ type, id, message, file } = body);
+    }
+
     const { identy, sub: userId, name: userName, type: userType } = req.user;
 
     switch (type) {
@@ -134,6 +152,19 @@ async function handler(req) {
 
         // Broadcast message via Supabase Realtime
         try {
+          // Get user avatar from Contractor model
+          let userAvatar = null;
+          try {
+            const contractor = await prisma.contractor.findUnique({
+              where: { uid: userId },
+              select: { avatar: true }
+            });
+            userAvatar = contractor?.avatar || null;
+          } catch (avatarError) {
+            console.warn('Failed to fetch user avatar:', avatarError);
+            // Continue without avatar
+          }
+
           const realtimeMessage = {
             uid: messageUID,
             type: 'text',
@@ -144,7 +175,7 @@ async function handler(req) {
             timestamp: storedMessage?.createdAt || new Date().toISOString(),
             sequence: storedMessage?.sequence || 1,
             read: false,
-            avatar: null // TODO: Add user avatar support
+            avatar: userAvatar
           };
           
           await realtimeChat.broadcastMessage(chat.uid, realtimeMessage);
@@ -188,7 +219,7 @@ async function handler(req) {
         }
 
         // Verify user is part of this chat
-        const isParticipant = 
+        const isParticipant =
           (userType === 'teacher' && chat.instructorID === userId) ||
           (userType === 'student' && chat.studentID === userId);
 
@@ -199,13 +230,26 @@ async function handler(req) {
           );
         }
 
-        // In production, handle file upload to storage service
-        // and save file reference to database
+        // multipart/form-data로 받은 파일 처리
+        let fileData;
+        if (file instanceof File) {
+          // File 객체를 Base64로 변환 (기존 시스템과 호환성 유지)
+          const arrayBuffer = await file.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          const base64 = buffer.toString('base64');
+          fileData = `data:${fileType || file.type};base64,${base64}`;
+        } else {
+          // 이미 Base64 문자열인 경우 (하위 호환성)
+          fileData = file;
+        }
+
+        // TODO: 향후 개선 - 파일 스토리지 서비스(S3, Cloudinary 등)에 업로드하고 URL만 저장
+        // 현재는 Base64로 변환하여 저장 (메모리/DB 크기 비효율적)
 
         const updatedChat = await prisma.chat.update({
           where: { uid: id },
           data: {
-            lastChat: '[File uploaded]',
+            lastChat: `[파일: ${fileName || file.name || 'unknown'}]`,
             lastChatSender: userType === 'teacher' ? 'instructor' : 'student',
             updateTime: new Date()
           }
@@ -214,7 +258,8 @@ async function handler(req) {
         return NextResponse.json({
           success: true,
           message: 'File uploaded successfully',
-          chat: updatedChat
+          chat: updatedChat,
+          fileData // 클라이언트로 다시 전송 (필요시)
         });
       }
 
@@ -226,13 +271,54 @@ async function handler(req) {
           );
         }
 
-        // In production, implement message deletion from messages table
-        // For now, just return success
-        
-        return NextResponse.json({
-          success: true,
-          message: 'Message deleted'
-        });
+        try {
+          // MongoDB에서 메시지 조회 (권한 확인을 위해)
+          const collection = await (await import('@/utils/mongodb')).getChatCollection(identy);
+
+          // messages.uid로 해당 메시지가 포함된 채팅방 찾기
+          const chatRoom = await collection.findOne(
+            { 'messages.uid': id },
+            { projection: { messages: { $elemMatch: { uid: id } }, _id: 1 } }
+          );
+
+          if (!chatRoom || !chatRoom.messages || chatRoom.messages.length === 0) {
+            return NextResponse.json(
+              { error: 'Message not found' },
+              { status: 404 }
+            );
+          }
+
+          const message = chatRoom.messages[0];
+
+          // 권한 확인: 메시지 작성자만 삭제 가능
+          if (message.senderId !== userId) {
+            return NextResponse.json(
+              { error: 'You can only delete your own messages' },
+              { status: 403 }
+            );
+          }
+
+          // 메시지 삭제 실행
+          const { deleteMessage } = await import('@/utils/mongodb');
+          const deleted = await deleteMessage(id, identy);
+
+          if (!deleted) {
+            throw new Error('Failed to delete message');
+          }
+
+          console.log(`Message deleted: ${id} by user ${userId}`);
+
+          return NextResponse.json({
+            success: true,
+            message: 'Message deleted successfully'
+          });
+        } catch (error) {
+          console.error('Message deletion error:', error);
+          return NextResponse.json(
+            { error: error.message || 'Failed to delete message' },
+            { status: 500 }
+          );
+        }
       }
 
       case 'list': {

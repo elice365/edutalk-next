@@ -1,5 +1,6 @@
 import "./globals.css";
 import { AuthProvider } from "@/components/provider/Auth";
+import { ToastProvider } from "@/components/provider/Toast";
 
 export const metadata = {
   // 기본 메타데이터
@@ -258,9 +259,11 @@ export default function RootLayout({ children }) {
         <meta property="business:contact_data:country_name" content="대한민국" />
       </head>
       <body className="font-sans antialiased">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

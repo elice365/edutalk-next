@@ -57,11 +57,12 @@ if (typeof document !== 'undefined') {
   }
 }
 
-const ChatMessage = ({ 
-  messages, 
+const ChatMessage = ({
+  messages,
   messagesEndRef,
   autoScroll = true,
-  isOpponentTyping = false
+  isOpponentTyping = false,
+  onDeleteMessage
 }) => {
   const scrollContainerRef = useRef(null);
   const [isUserScrolling, setIsUserScrolling] = useState(false);
@@ -172,7 +173,11 @@ const ChatMessage = ({
         <div className={chat.messages.container}>
           {/* 실제 메시지 */}
           {messages.map((message, index) => (
-            <MessageItem key={message.id || `msg-${index}`} message={message} />
+            <MessageItem
+              key={message.id || `msg-${index}`}
+              message={message}
+              onDeleteMessage={onDeleteMessage}
+            />
           ))}
           
           {/* 타이핑 표시기 - 채팅 풍선 형태 */}

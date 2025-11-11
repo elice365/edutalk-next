@@ -23,6 +23,7 @@ model Contractor {
   origin         String?
   type           String?   @db.VarChar
   name           String?   @db.VarChar
+  avatar         String?   @db.VarChar(500)
 
   @@index([certified])
   @@index([emailToken])
