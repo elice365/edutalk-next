@@ -54,6 +54,7 @@ const ChatInterface = ({ token }) => {
     setNewMessage,
     handleSendMessage,
     handleTyping,
+    handleDeleteMessage,
     isLoading,
     isOpponentTyping
   } = useChat(user, selectedChatUser, token);
@@ -99,11 +100,12 @@ const ChatInterface = ({ token }) => {
       />
       
       <div className={dashboard?.chat?.messagesContainer || "flex-1 overflow-hidden"}>
-        <ChatMessage 
+        <ChatMessage
           messages={messages}
           messagesEndRef={messagesEndRef}
           autoScroll={true}
           isOpponentTyping={isOpponentTyping}
+          onDeleteMessage={handleDeleteMessage}
         />
       </div>
       
